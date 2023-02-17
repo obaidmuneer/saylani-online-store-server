@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv'
 
 import bucket from "../firebase/index.mjs";
 import upload from "../middlewares/multerConfig.mjs";
-import productModel from '../models/productModel.mjs'
+import { productModel } from '../models/productModel.mjs'
 import auth from "../middlewares/auth.mjs";
 import categoryModel from "../models/categoryModel.mjs";
 
@@ -13,13 +13,32 @@ const router = express.Router()
 dotenv.config()
 
 router.get('/', async (req, res) => {
-    console.log(req.query);
-    const page = req.query.page || 0
     try {
         const products = await productModel.find({}, {}, {
             sort: { '_id': -1 },
-            limit: 40,
-            skip: page
+        })
+        res.status(200).send({
+            messege: 'docs fetched successfully',
+            products
+        })
+    } catch (err) {
+        res.status(500).send({
+            messege: 'failed to fetch docs'
+        })
+    }
+})
+
+router.get('/search', async (req, res) => {
+    req.query.search
+    try {
+        const products = await productModel.find({
+            title: {
+                $regex: req.query.search,
+                // $regex: `^${req.query.search}`,
+                $options: 'i'
+            },
+        }, {}, {
+            sort: { '_id': -1 },
         })
         res.status(200).send({
             messege: 'docs fetched successfully',
@@ -51,12 +70,12 @@ router.get('/:category', async (req, res) => {
     }
 })
 
-express().use(auth)
+router.use(auth)
 
 router.post('/', upload.any(), async (req, res) => {
     const schema = Joi.object({
         // file: Joi.binary().required(),
-        name: Joi.string().required(),
+        title: Joi.string().required(),
         category: Joi.string().required(),
         description: Joi.string().required(),
         unit_name: Joi.string().required(),
@@ -64,7 +83,7 @@ router.post('/', upload.any(), async (req, res) => {
     })
     // console.log(req.body, req.files[0]);
     try {
-        const { name, category, description, unit_name, unit_price } =
+        const { title, category, description, unit_name, unit_price } =
             await schema.validateAsync(req.body);
         bucket.upload(
             req.files[0].path,
@@ -89,7 +108,7 @@ router.post('/', upload.any(), async (req, res) => {
                             const product = await productModel.create({
                                 file: urlData[0],
                                 fileName: req.files[0].filename,
-                                name,
+                                title,
                                 category,
                                 description,
                                 unit_name,
@@ -97,7 +116,7 @@ router.post('/', upload.any(), async (req, res) => {
                                 ip: req.ip
                             })
                             res.status(200).send({
-                                messege: 'doc added successfully',
+                                messege: 'product added successfully',
                                 product
                             })
                         }
@@ -115,26 +134,6 @@ router.post('/', upload.any(), async (req, res) => {
         })
     }
 
-})
-
-router.post('/category', async (req, res) => {
-    if (!req.verifiedToken.isAdmin) {
-        res.status(401).send({
-            messege: 'Unauthorized access'
-        })
-        return
-    }
-    try {
-        const category = await categoryModel.create({ category: req.body.category })
-        res.status(200).send({
-            messege: 'category added successfully',
-            category
-        })
-    } catch (err) {
-        res.status(500).send({
-            messege: 'failed to fetch docs'
-        })
-    }
 })
 
 router.delete('/:id', async (req, res) => {

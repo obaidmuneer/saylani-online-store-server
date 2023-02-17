@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+import cartModel from "../models/cartModel.mjs"
 import storeUserModel from "../models/storeUserModel.mjs"
 
 const auth = async (req, res, next) => {
@@ -23,10 +24,11 @@ const auth = async (req, res, next) => {
         const user = await storeUserModel.findOne({ _id: verifiedToken.id }, {}, {
             select: 'firstName lastName email'
         })
-        // console.log(user);
+        const cart = await cartModel.findOne({ user_id: user.id })
         req.token = token
         req.verifiedToken = verifiedToken
         req.user = user
+        req.cart = cart || []
         next()
 
     } catch (error) {

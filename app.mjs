@@ -6,6 +6,7 @@ import * as dotenv from 'dotenv'
 import productRoute from './routes/product.mjs'
 import userRoute from './routes/user.mjs'
 import orderRoute from './routes/order.mjs'
+import categoryRoute from './routes/category.mjs'
 
 const app = express()
 const port = process.env.PORT || 8080
@@ -33,6 +34,7 @@ app.get('/', async (req, res) => {
 app.use('/api/v1/products', productRoute)
 app.use('/api/v1/users', userRoute)
 app.use('/api/v1/orders', orderRoute)
+app.use('/api/v1/category', categoryRoute)
 
 ////////////////mongodb connected disconnected events///////////////////////////////////////////////
 mongoose.connection.on('connected', function () {//connected

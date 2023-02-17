@@ -3,55 +3,80 @@ import Joi from 'joi'
 import * as dotenv from 'dotenv'
 
 import auth from "../middlewares/auth.mjs";
-import productModel from '../models/productModel.mjs'
-import orderModel from "../models/orderModel.mjs";
+import { productModel } from '../models/productModel.mjs'
+import { orderItemModel } from "../models/orderItemModel.mjs";
+import cartModel from "../models/cartModel.mjs";
 
 const router = express.Router()
 dotenv.config()
 
-express().use(auth)
+router.use(auth)
 
 router.get('/', async (req, res) => {
-    console.log(req.query);
-    const page = req.query.page || 0
     try {
-        const order = await orderModel.find({ user_id: req.user._id }, {}, {
-            sort: { '_id': -1 },
-            limit: 40,
-            skip: page
-        })
+        const cart = await cartModel.find({ user_id: req.user._id })
+        console.log(cart);
         res.status(200).send({
-            messege: 'docs fetched successfully',
-            order
+            messege: 'cart fetched successfully',
+            cart
         })
     } catch (err) {
         res.status(500).send({
-            messege: 'failed to fetch docs'
+            messege: 'failed to fetch cart'
         })
     }
 })
 
-express().use(auth)
-
 router.post('/', async (req, res) => {
     const schema = Joi.object({
-        user_id: Joi.string().required(),
         product_id: Joi.string().required(),
-        total: Joi.string().required(),
+        quantity: Joi.number().required(),
+        cart_id: Joi.string(),
     })
     try {
-        const { user_id, product_id, total } =
+        const { product_id, quantity, cart_id } =
             await schema.validateAsync(req.body);
-        const order = await orderModel.create({
-            user_id,
-            product_id,
-            total,
-            ip: req.ip
+        const product = await productModel.findById(product_id, {}, { select: 'category file title unit_name unit_price _id' })
+        // console.log(product);
+        if (!product) throw new Error('Product not found')
+        const priceByQuantity = product.unit_price * quantity
+        const order = new orderItemModel({
+            product: product,
+            quantity,
+            total: priceByQuantity,
         })
+        // console.log(order);
+        const cart = await cartModel.findById(cart_id)
+        // const cart = await cartModel.findByIdAndUpdate(cart_id, {
+        //     $addToSet: {
+        //         'orders': order
+        //     }
+        // }, { new: true })            
+
+        if (!cart) {
+            const cart = await cartModel.create({
+                user_id: req.user._id.toString(),
+                orders: order,
+                total: priceByQuantity
+            })
+            res.status(200).send({
+                messege: 'product added to cart',
+                cart
+            })
+            return
+        }
+        const productInOrder = await cartModel.findOne({ 'orders.product': product })
+        console.log(productInOrder);
+        if (!productInOrder) {
+            cart.orders.push(order)
+            await cart.save()
+        }
         res.status(200).send({
-            messege: 'order added added successfully',
-            order
+            messege: 'product added to cart',
+            cart
         })
+
+
     }
     catch (err) {
         console.log(err);
@@ -73,7 +98,7 @@ router.put('/', async (req, res) => {
         const { user_id, product_id, status, total } =
             await schema.validateAsync(req.body);
         const product = await productModel.findOne({ _id: product_id, isDeleted: false })
-        const order = await orderModel.findOne({ status: 'pending', user_id, order_id, isDeleted: false })
+        const order = await orderItemModel.findOne({ status: 'pending', user_id, order_id, isDeleted: false })
         order.push(product._id.toString())
         order.total = total
         order.save()
@@ -97,7 +122,7 @@ router.delete('/:id', async (req, res) => {
     try {
         const { user_id, product_id } =
             await schema.validateAsync(req.body);
-        const order = await orderModel.findOne({ _id: order_id, user_id, isDeleted: false })
+        const order = await orderItemModel.findOne({ _id: order_id, user_id, isDeleted: false })
         order = order.filter(eachOrder => eachOrder.toString() !== product_id)
         await order.save()
         res.status(200).send({
@@ -121,7 +146,7 @@ router.delete('/', async (req, res) => {
         const { order_id } = await schema.validateAsync({
             order_id: req.body.order_id,
         });
-        await orderModel.deleteOne({ order_id })
+        await orderItemModel.deleteOne({ order_id })
         res.status(200).send({
             messege: 'doc deleted successfully',
         })

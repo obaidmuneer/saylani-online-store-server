@@ -9,19 +9,16 @@ const router = express.Router();
 router.post('/signup', async (req, res) => {
     // console.log(req.body);
     try {
-        const { firstName, lastName, email, password, confirmPassword } = req.body
-        if (password !== confirmPassword) {
-            res.status(400).send({
-                message: 'Password does not match'
-            })
-        }
+        const { firstName, lastName, email, phone, password } = req.body
         const schema = Joi.object({
             firstName: Joi.string().required(),
             lastName: Joi.string().required(),
             email: Joi.string().email().required(),
+            phone: Joi.number().required(),
             password: Joi.string().min(6).required(),
         })
-        const verifiedData = await schema.validateAsync({ firstName, lastName, email, password })
+        const verifiedData = await schema.validateAsync({ firstName, lastName, email, password, phone })
+        // console.log(verifiedData);
         let user = new storeUserModel(verifiedData)
         const token = await user.getToken()
         await user.save()
@@ -82,6 +79,8 @@ router.post('/signin', async (req, res) => {
     }
 })
 
+// router.use(auth)
+
 router.get('/logout', auth, (req, res) => {
     res.clearCookie('token', {
         httpOnly: true,
@@ -96,7 +95,8 @@ router.get('/logout', auth, (req, res) => {
 router.get('/profile', auth, async (req, res) => {
     res.send({
         message: 'User Logged in',
-        user: req.user
+        user: req.user,
+        cart: req.cart
     })
 })
 
