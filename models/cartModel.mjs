@@ -7,7 +7,7 @@ const cartSchema = new Schema({
         type: orderItemSchema,
         required: true,
     }],
-    total: { type: String, required: true },
+    total: { type: Number, required: true },
     isChecked: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 })
