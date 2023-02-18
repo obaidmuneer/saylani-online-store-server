@@ -36,16 +36,15 @@ router.post('/', async (req, res) => {
     try {
         const { product_id, quantity, cart_id } =
             await schema.validateAsync(req.body);
-        const product = await productModel.findById(product_id, {}, { select: 'category file title unit_name unit_price _id' })
+        const product = await productModel.findById(product_id, {}, { select: 'category file title unit_name unit_price' })
         // console.log(product);
         if (!product) throw new Error('Product not found')
         const priceByQuantity = product.unit_price * quantity
         const order = new orderItemModel({
-            product: product,
+            product: { ...product, id: product_id },
             quantity,
             total: priceByQuantity,
         })
-        // console.log(order);
         const cart = await cartModel.findById(cart_id)
         // const cart = await cartModel.findByIdAndUpdate(cart_id, {
         //     $addToSet: {
@@ -60,26 +59,31 @@ router.post('/', async (req, res) => {
                 total: priceByQuantity
             })
             res.status(200).send({
-                messege: 'product added to cart',
+                messege: {
+                    type: 'success',
+                    text: 'Product Added to Cart Successfully'
+                },
                 cart
             })
             return
         }
         const productInOrder = await cartModel.findOne({ 'orders.product': product })
-        console.log(productInOrder);
+        // console.log(cart);
         if (!productInOrder) {
             cart.orders.push(order)
+            cart.total += priceByQuantity
             await cart.save()
         }
         res.status(200).send({
-            messege: 'product added to cart',
+            messege: {
+                type: productInOrder ? 'warning' : 'success',
+                text: productInOrder ? 'Product is already in Cart' : 'Product Added to Cart Successfully'
+            },
             cart
         })
-
-
     }
     catch (err) {
-        console.log(err);
+        // console.log(err);
         res.status(400).send({
             messege: err.messege
         })
@@ -115,43 +119,18 @@ router.put('/', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     const schema = Joi.object({
-        user_id: Joi.string().required(),
-        order_id: Joi.string().required(),
-        product_id: Joi.string().required(),
+        cart_id: Joi.string().required(),
     })
     try {
-        const { user_id, product_id } =
-            await schema.validateAsync(req.body);
-        const order = await orderItemModel.findOne({ _id: order_id, user_id, isDeleted: false })
-        order = order.filter(eachOrder => eachOrder.toString() !== product_id)
-        await order.save()
+        const { cart_id } =
+            await schema.validateAsync(req.params);
+        const cart = await cartModel.findOneAndRemove({ _id: cart_id, user_id: req.user._id })
         res.status(200).send({
-            messege: 'product removed successfully',
-            order
+            messege: 'cart removed successfully',
         })
     }
     catch (err) {
         console.log(err);
-        res.status(400).send({
-            messege: err.messege
-        })
-    }
-})
-
-router.delete('/', async (req, res) => {
-    const schema = Joi.object({
-        order_id: Joi.string().required(),
-    })
-    try {
-        const { order_id } = await schema.validateAsync({
-            order_id: req.body.order_id,
-        });
-        await orderItemModel.deleteOne({ order_id })
-        res.status(200).send({
-            messege: 'doc deleted successfully',
-        })
-    }
-    catch (err) {
         res.status(400).send({
             messege: err.messege
         })
