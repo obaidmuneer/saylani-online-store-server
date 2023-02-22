@@ -93,4 +93,86 @@ router.post('/', async (req, res) => {
 
 })
 
+router.put('/', async (req, res) => {
+    const schema = Joi.object({
+        cart_id: Joi.string().required(),
+        product_id: Joi.string().required(),
+        quantity: Joi.number().required(),
+    })
+    try {
+        const { product_id, cart_id, quantity } =
+            await schema.validateAsync(req.body);
+        const product = await productModel.findOne({ _id: product_id, isDeleted: false })
+        if (!product) return res.status(404).send({ message: 'Product not found' })
+
+        const cart = await cartModel.findById(cart_id)
+        if (!cart) return res.status(404).send({ message: 'Cart not found' })
+
+        const item = cart.orders.find(order => order.product._id == product_id)
+        if (!item) return res.status(404).send({ message: 'ordered item is not found in cart' })
+        // console.log(item);
+        const productPrice = +item.product.unit_price
+        if (quantity) {
+            item.quantity += 1
+            item.total += productPrice
+            cart.total += productPrice
+        } else if (quantity === 0) {
+            if (item.quantity > 1) {
+                item.quantity -= 1
+                item.total -= productPrice
+                cart.total -= productPrice
+            } else {
+                return res.status(406).send({
+                    messege: {
+                        type: 'info',
+                        text: 'quantity can not be less then 1'
+                    }
+                })
+            }
+        }
+        await cart.save()
+
+        res.status(200).send({
+            messege: {
+                type: 'success',
+                text: 'quantity updated successfully'
+            },
+            cart
+        })
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({
+            messege: 'something went wrong',
+        })
+    }
+})
+
+router.delete('/:cartId', async (req, res) => {
+    // console.log(req.params);
+    const schema = Joi.object({
+        cartId: Joi.string().required(),
+    })
+    try {
+        const { cartId } =
+            await schema.validateAsync(req.params);
+        // console.log(cartId);
+        await cartModel.findOneAndRemove({ _id: cartId, user_id: req.user._id, isChecked: false })
+        res.status(200).send({
+            messege: {
+                type: 'success',
+                text: 'cart deleted successfully'
+            }
+        })
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(400).send({
+            messege: {
+                type: 'error',
+                text: 'something went wrong'
+            }
+        })
+    }
+})
+
 export default router
