@@ -13,7 +13,7 @@ const port = process.env.PORT || 8080
 
 app.use(cookieParser())
 app.use(cors({
-    origin: ['http://localhost:3000', "https://react-sysborg-clone.web.app"],
+    origin: ['http://localhost:3000', "https://saylani-online-store.vercel.app"],
     credentials: true
 }))
 app.use(express.json())
@@ -27,7 +27,7 @@ mongoose.connect(dbUri)
 
 app.get('/', async (req, res) => {
     res.status(200).send({
-        messege: 'This is the server for sysborg clone',
+        messege: 'This is the server for saylani online store',
     })
 })
 
