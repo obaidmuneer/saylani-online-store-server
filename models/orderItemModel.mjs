@@ -2,7 +2,7 @@ import { Schema, model } from 'mongoose'
 
 const orderItemSchema = new Schema({
     product: { type: Object },
-    total: { type: String, required: true },
+    total: { type: Number, required: true },
     quantity: { type: Number, required: true },
     createdAt: { type: Date, default: Date.now }
 })
