@@ -93,6 +93,53 @@ router.post('/', async (req, res) => {
 
 })
 
+router.post('/place', async (req, res) => {
+    const schema = Joi.object({
+        cart_id: Joi.string().required(),
+        name: Joi.string().required(),
+        address: Joi.string().required(),
+    })
+    try {
+        const { cart_id, name, address } =
+            await schema.validateAsync(req.body);
+
+        const cart = await cartModel.findById(cart_id)
+
+        if (!cart) return res.status(404).send({
+            messege: {
+                type: 'error',
+                text: 'Cart not found'
+            }
+        })
+        await orderModel.create({
+            name,
+            address,
+            cart: cart_id,
+            user_id: req.user._id.toString(),
+            isplaced: true
+        })
+        cart.isChecked = true
+        await cart.save()
+
+
+        res.status(200).send({
+            messege: {
+                type: 'success',
+                text: 'Order placed Successfully'
+            },
+            cart
+        })
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).send({
+            type: 'error',
+            text: 'something went wrong'
+        })
+    }
+
+})
+
 router.put('/', async (req, res) => {
     const schema = Joi.object({
         cart_id: Joi.string().required(),
