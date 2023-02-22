@@ -3,6 +3,8 @@ import Joi from 'joi'
 import storeUserModel from "../models/storeUserModel.mjs";
 import bcrypt from 'bcrypt'
 import auth from "../middlewares/auth.mjs";
+import cartModel from "../models/cartModel.mjs";
+import orderModel from "../models/orderModel.mjs";
 
 const router = express.Router();
 
@@ -55,6 +57,8 @@ router.post('/signin', async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch) throw new Error('Bad email or password')
+        const cart = await cartModel.findOne({ user_id: user.id, isChecked: false })
+        const orders = await orderModel.find({ user_id: user.id, isplaced: true })
 
         const token = await user.getToken()
         res.cookie('token', token, {
@@ -67,9 +71,15 @@ router.post('/signin', async (req, res) => {
         // console.log(token);
         // console.log(req.cookies.token)
         res.send({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
+            message: 'User Logged in',
+            user: {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+            },
+            cart: cart || [],
+            orders
+
         })
     } catch (error) {
         console.log(error)
@@ -96,7 +106,8 @@ router.get('/profile', auth, async (req, res) => {
     res.send({
         message: 'User Logged in',
         user: req.user,
-        cart: req.cart
+        cart: req.cart,
+        orders: req.orders
     })
 })
 
