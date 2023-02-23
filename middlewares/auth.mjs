@@ -23,10 +23,12 @@ const auth = async (req, res, next) => {
             return
         }
         const user = await storeUserModel.findOne({ _id: verifiedToken.id }, {}, {
-            select: 'firstName lastName email'
+            select: 'firstName lastName email phone isAdmin'
         })
         const cart = await cartModel.findOne({ user_id: user.id, isChecked: false })
         const orders = await orderModel.find({ user_id: user.id, isplaced: true })
+            .populate('cart')
+            .populate({ path: 'user_id', select: 'phone' })
         req.token = token
         req.verifiedToken = verifiedToken
         req.user = user
