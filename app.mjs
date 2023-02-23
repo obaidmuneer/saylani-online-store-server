@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser'
 import * as dotenv from 'dotenv'
 import productRoute from './routes/product.mjs'
 import userRoute from './routes/user.mjs'
+import cartRoute from './routes/cart.mjs'
 import orderRoute from './routes/order.mjs'
 import categoryRoute from './routes/category.mjs'
 
@@ -13,7 +14,7 @@ const port = process.env.PORT || 8080
 
 app.use(cookieParser())
 app.use(cors({
-    origin: ['http://localhost:3000', "https://saylani-online-store.vercel.app"],
+    origin: ['http://localhost:3000', "https://saylani-online-store.vercel.app", "https://saylani-online-store-obaidmuneer.vercel.app"],
     credentials: true
 }))
 app.use(express.json())
@@ -33,6 +34,7 @@ app.get('/', async (req, res) => {
 
 app.use('/api/v1/products', productRoute)
 app.use('/api/v1/users', userRoute)
+app.use('/api/v1/cart', cartRoute)
 app.use('/api/v1/orders', orderRoute)
 app.use('/api/v1/category', categoryRoute)
 
