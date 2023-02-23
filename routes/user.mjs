@@ -59,6 +59,8 @@ router.post('/signin', async (req, res) => {
         if (!isMatch) throw new Error('Bad email or password')
         const cart = await cartModel.findOne({ user_id: user.id, isChecked: false })
         const orders = await orderModel.find({ user_id: user.id, isplaced: true })
+            .populate('cart')
+            .populate({ path: 'user_id', select: 'phone' })
 
         const token = await user.getToken()
         res.cookie('token', token, {
@@ -76,10 +78,11 @@ router.post('/signin', async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
+                phone: user.phone,
+                isAdmin: user.isAdmin
             },
             cart: cart || [],
             orders
-
         })
     } catch (error) {
         console.log(error)
