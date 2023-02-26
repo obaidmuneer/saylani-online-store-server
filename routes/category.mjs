@@ -5,6 +5,7 @@ import auth from "../middlewares/auth.mjs";
 import upload from "../middlewares/multerConfig.mjs";
 import categoryModel from "../models/categoryModel.mjs";
 import fs from 'fs';
+import admin from "../middlewares/admin.mjs";
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.post('/', [auth , upload.any()], async (req, res) => {
+router.post('/', [auth, admin, upload.any()], async (req, res) => {
     const schema = Joi.object({
         title: Joi.string().required(),
     })

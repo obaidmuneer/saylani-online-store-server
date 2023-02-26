@@ -8,6 +8,7 @@ import upload from "../middlewares/multerConfig.mjs";
 import { productModel } from '../models/productModel.mjs'
 import auth from "../middlewares/auth.mjs";
 import categoryModel from "../models/categoryModel.mjs";
+import admin from "../middlewares/admin.mjs";
 
 const router = express.Router()
 dotenv.config()
@@ -71,6 +72,7 @@ router.get('/:category', async (req, res) => {
 })
 
 router.use(auth)
+router.use(admin)
 
 router.post('/', upload.any(), async (req, res) => {
     const schema = Joi.object({

@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv'
 import auth from "../middlewares/auth.mjs";
 import cartModel from "../models/cartModel.mjs";
 import orderModel from "../models/orderModel.mjs";
+import admin from "../middlewares/admin.mjs";
 
 const router = express.Router()
 dotenv.config()
@@ -60,14 +61,7 @@ router.post('/', async (req, res) => {
 
 })
 
-router.use((req, res, next) => {
-    if (!req.verifiedToken.isAdmin) {
-        res.status(401).send({
-            messege: 'Unauthorized',
-        })
-    }
-    next()
-})
+router.use(admin)
 
 router.get('/', async (req, res) => {
     try {
