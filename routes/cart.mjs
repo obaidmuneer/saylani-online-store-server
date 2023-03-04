@@ -14,8 +14,8 @@ router.use(auth)
 
 router.get('/', async (req, res) => {
     try {
-        const cart = await cartModel.find({ user_id: req.user._id })
-        console.log(cart);
+        const cart = await cartModel.findOne({ user_id: req.user._id, isChecked: false })
+        // console.log(cart);
         res.status(200).send({
             messege: 'cart fetched successfully',
             cart
