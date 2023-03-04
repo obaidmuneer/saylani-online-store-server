@@ -8,6 +8,7 @@ import userRoute from './routes/user.mjs'
 import cartRoute from './routes/cart.mjs'
 import orderRoute from './routes/order.mjs'
 import categoryRoute from './routes/category.mjs'
+import chatbotRoute from './routes/chatbot.mjs'
 
 const app = express()
 const port = process.env.PORT || 8080
@@ -37,6 +38,7 @@ app.use('/api/v1/users', userRoute)
 app.use('/api/v1/cart', cartRoute)
 app.use('/api/v1/orders', orderRoute)
 app.use('/api/v1/category', categoryRoute)
+app.use('/api/v1/chatbot', chatbotRoute)
 
 ////////////////mongodb connected disconnected events///////////////////////////////////////////////
 mongoose.connection.on('connected', function () {//connected
