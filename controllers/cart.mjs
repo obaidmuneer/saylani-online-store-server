@@ -33,7 +33,7 @@ import { productModel } from "../models/productModel.mjs";
 //     // return itemIndex
 // }
 
-export const create_update_cart = async (productId, quantity, usedId) => {
+export const create_update_cart = async (productId, quantity, userId) => {
     const product = await productModel.findById(productId, {}, { select: 'category file title unit_name unit_price' })
     if (!product) throw new Error('Product not found')
 
@@ -43,21 +43,22 @@ export const create_update_cart = async (productId, quantity, usedId) => {
         quantity,
         total: priceOfProduct,
     })
-    const cart = await cartModel.findOne({ user_id: usedId, isChecked: false })
+    const cart = await cartModel.findOne({ user_id: userId, isChecked: false })
 
     if (!cart) {
         const cart = await cartModel.create({
-            user_id: usedId,
+            user_id: userId,
             orders: order,
             total: priceOfProduct
         })
         return cart
     }
-    const itemIndex = cart.orders.findIndex(order => order.product._id == productId)
+
+    const itemIndex = cart.orders.findIndex(order => order.product._id.toString() == productId.toString())
 
     if (itemIndex > -1) {
-        const produtPrice = +cart.orders[itemIndex].product.unit_price
-        cart.orders[itemIndex].quantity += 1
+        const produtPrice = +cart.orders[itemIndex].product.unit_price * quantity
+        cart.orders[itemIndex].quantity += quantity
         cart.orders[itemIndex].total += produtPrice
         cart.total += produtPrice
     } else {
