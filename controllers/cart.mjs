@@ -68,3 +68,34 @@ export const create_update_cart = async (productId, quantity, userId) => {
     await cart.save()
     return cart
 }
+
+export const update_cart = async (cartId, productId, quantity, intent) => {
+    const product = await productModel.findOne({ _id: productId, isDeleted: false })
+    if (!product) throw new Error('Product not found')
+
+    const cart = await cartModel.findById(cartId)
+    if (!cart) throw new Error('Cart not found')
+
+    const item = cart.orders.find(order => order.product._id.toString() == productId.toString())
+    if (!item) throw new Error('Item not found')
+    // console.log(item);
+    const productPrice = +item.product.unit_price * quantity
+    if (quantity && intent === 'increase') {
+        item.quantity += quantity
+        item.total += productPrice
+        cart.total += productPrice
+    } else if (quantity && intent === 'decrease') {
+        if (item.quantity > 1 && (item.quantity - quantity) > 0) {
+            item.quantity -= quantity
+            item.total -= productPrice
+            cart.total -= productPrice
+        } else {
+            throw new Error('Quantity cannot be less than 1')
+        }
+    }
+    await cart.save()
+
+
+    return cart
+
+}
