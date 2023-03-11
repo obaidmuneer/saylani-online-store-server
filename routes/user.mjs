@@ -75,6 +75,7 @@ router.post('/signin', async (req, res) => {
         res.send({
             message: 'User Logged in',
             user: {
+                _id: user._id,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
