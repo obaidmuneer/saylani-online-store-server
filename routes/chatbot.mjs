@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import categoryModel from '../models/categoryModel.mjs';
 import { productModel } from '../models/productModel.mjs'
-import { create_update_cart } from '../controllers/cart.mjs';
+import { create_update_cart, update_cart } from '../controllers/cart.mjs';
 import { place_order } from '../controllers/order.mjs';
 
 const router = Router()
@@ -10,10 +10,13 @@ router.post('/', async (req, res) => {
     const body = req.body
     const intentName = body.queryResult.intent.displayName
     const params = body.queryResult.parameters
-    const userId = body.originalDetectIntentRequest.payload.userId
-    console.log(userId);
-    console.log(intentName);
-    console.log(params);
+    const session = body.session.split('/')
+    const userId = session[session.length - 1]
+    // const userId = body.originalDetectIntentRequest.payload.userId
+    // console.log(userId);
+    // console.log(body);
+    // console.log(intentName);
+    // console.log(params);
     const context = body.queryResult.outputContexts
     // console.log(body.responseId);
 
@@ -57,15 +60,23 @@ router.post('/', async (req, res) => {
                 response(`we have ${product.title} in ${product.unit_name} how many ${product.unit_name} do you want ?`)
             else if (params.qty) {
                 if (params.item) {
-                    const cart = (userId) && await create_update_cart(product._id, params.qty, userId)
-                    if (cart)
-                        response(`${params.qty} ${product.unit_name} ${params.item} has been added to cart, do you want to order other items?`)
+                    await create_update_cart(product._id, params.qty, userId)
+                    response(`${params.qty} ${product.unit_name} ${params.item} has been added to cart, do you want to order other items?`)
                 }
                 else response(`please tell me which product do you want to order`)
             }
         }
         if (intentName === 'orderItem - no') {
             response(`Do you want to checkout?`)
+        }
+        if (intentName === 'updateItem') {
+            try {
+                await update_cart(userId, product._id, params.qty, params.intent)
+                response(`${params.qty} ${product.unit_name} of ${product.title} has been ${params.intent}d from cart`)
+            } catch (error) {
+                response(`${error}`)
+            }
+
         }
         if (intentName === 'itemPrice') {
             if (product)
@@ -83,7 +94,7 @@ router.post('/', async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        response('soemthing went wrong')
+        response('something went wrong')
     }
 
 });
