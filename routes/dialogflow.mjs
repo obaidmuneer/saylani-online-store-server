@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import fs from 'fs';
 import stream from 'stream';
-import dialogflow from '@google-cloud/dialogflow';
+import { v2beta1 as dialogflow } from '@google-cloud/dialogflow';
 import ffmpeg from 'fluent-ffmpeg';
 import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg'
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 
 const router = Router()
@@ -49,11 +51,11 @@ async function conversion(base64Data, callback) {
         // create a Writable stream to save the output file
         const filename = generateRandomFilename()
         // console.log(outputFilePath);
-        if (!fs.existsSync('audio')) {
-            fs.mkdirSync('audio');
-            console.log(`Folder '${'audio'}' created successfully!`);
-        }
-        const outputFilePath = `audio/${filename}.mp3`;
+        // if (!fs.existsSync('audio')) {
+        //     fs.mkdirSync('audio');
+        //     console.log(`Folder '${'audio'}' created successfully!`);
+        // }
+        const outputFilePath = `/tmp/${filename}.mp3`;
         const outputFileStream = fs.createWriteStream(outputFilePath);
 
         // run the ffmpeg command and save the output to the file
@@ -88,6 +90,9 @@ async function conversion(base64Data, callback) {
 
 async function detectIntent(query, userId, base64Data) {
     const sessionClient = new dialogflow.SessionsClient(CONFIGURATION);
+    const knowledgeBaseId = 'MTEzMTAzOTczODg3MzQwNzA3ODQ'
+    const knowledgeBasePath =
+        'projects/' + PROJECT_ID + '/knowledgeBases/' + knowledgeBaseId + '';
 
     const sessionPath = sessionClient.projectAgentSessionPath(
         PROJECT_ID,
@@ -131,6 +136,7 @@ async function detectIntent(query, userId, base64Data) {
         session: sessionPath,
         queryInput: queryData.queryInput,
         queryParams: {
+            knowledgeBaseNames: [knowledgeBasePath],
             payload: {
                 userId: userId
             },
