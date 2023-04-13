@@ -10,6 +10,9 @@ import orderRoute from './routes/order.mjs'
 import categoryRoute from './routes/category.mjs'
 import chatbotRoute from './routes/chatbot.mjs'
 import dialogflowRoute from './routes/dialogflow.mjs'
+import stripeRoute from './routes/stripe.mjs'
+import paymentRoute from './routes/payment.mjs'
+import bodyParser from 'body-parser'
 
 const app = express()
 const port = process.env.PORT || 8080
@@ -19,7 +22,16 @@ app.use(cors({
     origin: ['http://localhost:3000', "https://saylani-online-store.vercel.app", "https://saylani-online-store-obaidmuneer.vercel.app"],
     credentials: true
 }))
-app.use(express.json())
+// app.use(express.json())
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json({
+    verify: (req, res, buf) => {
+        req.rawBody = buf
+    }
+}))
+
 dotenv.config()
 app.set('trust proxy', true)
 
@@ -41,6 +53,8 @@ app.use('/api/v1/orders', orderRoute)
 app.use('/api/v1/category', categoryRoute)
 app.use('/api/v1/chatbot', chatbotRoute)
 app.use('/api/v1/dialogflow', dialogflowRoute)
+app.use('/api/v1/stripe', stripeRoute)
+app.use('/api/v1/payment', paymentRoute)
 
 ////////////////mongodb connected disconnected events///////////////////////////////////////////////
 mongoose.connection.on('connected', function () {//connected
