@@ -3,6 +3,7 @@ import categoryModel from '../models/categoryModel.mjs';
 import { productModel } from '../models/productModel.mjs'
 import { create_update_cart, update_cart } from '../controllers/cart.mjs';
 import { place_order } from '../controllers/order.mjs';
+import CONTROLLERS from '../controllers/export_controller.mjs'
 
 const router = Router()
 
@@ -34,6 +35,9 @@ router.post('/', async (req, res) => {
             outputContexts: oc && contexts.map(context => context.name.includes(oc.name) ?
                 { ...context, lifespanCount: oc.span } : context)
         }
+        // if (outputContext.length > 0) {
+        //     response['outputContexts'] = outputContext;
+        // }
     }
 
     try {
@@ -47,6 +51,7 @@ router.post('/', async (req, res) => {
 
         if (intentName === 'productList' || intentName === 'orderItem - yes') {
             const categories = await categoryModel.find({})
+            // console.log(categories);
             response(`we have different variety of products currently we have ${categories.map(category => ' ' + category.title)} which type of product do you want ?`)
         }
         if (intentName === 'productCategory') {
@@ -97,12 +102,24 @@ router.post('/', async (req, res) => {
                     response(`${params.quantity} ${product.title} is ${product.unit_price * params.quantity} rs and 1 ${product.title} is  ${product.unit_price} rs per ${product.unit_name}`)
             } else response(`this product is not available`)
         }
-        if (intentName === 'checkout') {
-            // console.log(context[1].parameters);
-            place_order(userId, params.name.name, params.address)
-            response(`your order is one the way ${params.name.name}`)
-
+        if (intentName === 'checkout_followup') {
+            const cart = await CONTROLLERS.cart.get_cart(userId)
+            response(`Ok ${params.name.name}. Your Total amount is ${cart.total} rs. Do you want to proceed with payment?`)
+        } else if (intentName === 'payment') {
+            const info = contexts.find(context => context.name.includes('get-info'));
+            const { name, address } = info && info.parameters
+            // console.log(name);
+            const user = await CONTROLLERS.user.get_user(userId)
+            const cart = await CONTROLLERS.cart.get_cart(user._id)
+            const payment = info && await CONTROLLERS.payment.make_payment(params, { user, cart })
+            if (payment) {
+                await place_order(userId, name.name, address)
+                response(`${payment.amount_received / 100} rs has been recieved from ${payment.receipt_email}`)
+            } else {
+                response(`I am really sorry i could not process your request, if you have any issue kindly contact saylani online support`)
+            }
         }
+
     } catch (error) {
         console.log(error);
         response('something went wrong')
