@@ -11,11 +11,8 @@ dotenv.config()
 const router = Router()
 
 const CREDENTIALS = JSON.parse(process.env.CREDENTIALS)
-// console.log(CREDENTIALS);
 const PROJECT_ID = CREDENTIALS.project_id
 const PRIVATE_KEY = CREDENTIALS.private_key.split(String.raw`\n`).join('\n')
-
-// console.log(PROJECT_ID);
 
 const CONFIGURATION = {
     credentials: {
@@ -63,16 +60,6 @@ async function conversion(base64Data, callback) {
         command.on('end', () => {
             console.log('Conversion complete');
             // console.log(outputFileStream.path);
-            // fs.readFile(outputFilePath, async (err, data) => {
-            //     if (err) {
-            //         console.log(`Error reading file: ${err.message}`);
-            //         // callback(err);
-            //         return;
-            //     }
-            //     // console.log(data);
-            //     await detectAudioIntent(data)
-            //     // callback(null, data);
-            // });
             resolve(outputFilePath);
 
         });
@@ -84,9 +71,6 @@ async function conversion(base64Data, callback) {
     });
 
 }
-
-
-// Instantiates a session client
 
 async function detectIntent(query, userId, base64Data) {
     const sessionClient = new dialogflow.SessionsClient(CONFIGURATION);
@@ -147,8 +131,6 @@ async function detectIntent(query, userId, base64Data) {
 
     const responses = await sessionClient.detectIntent(request);
     const result = responses[0].queryResult
-    // console.log(responses[0]?.queryResult);
-    // console.log(responses[0]?.outputAudio);
 
     const intent = responses[0]?.queryResult?.intent?.displayName
     const fulfillmentText = result?.fulfillmentText
@@ -183,60 +165,6 @@ async function detectIntent(query, userId, base64Data) {
     }
 }
 
-async function detectAudioIntent(audioData) {
-    const sessionClient = new dialogflow.SessionsClient(CONFIGURATION);
-
-    const sessionPath = sessionClient.projectAgentSessionPath(
-        PROJECT_ID,
-        'userId123'
-    );
-
-    const request = {
-        session: sessionPath,
-        queryInput: {
-            audioConfig: {
-                audioEncoding: 'AUDIO_ENCODING_MP3',
-                sampleRateHertz: 24000,
-                languageCode: 'en-US',
-            },
-        },
-        inputAudio: audioData,
-    };
-    const [response] = await sessionClient.detectIntent(request);
-    // console.log(response);
-
-    console.log('Detected intent:');
-    const result = response.queryResult;
-    console.log(result);
-
-    const contextClient = new dialogflow.ContextsClient();
-
-    console.log(`  Query: ${result.queryText}`);
-    console.log(`  Response: ${result.fulfillmentText}`);
-    if (result.intent) {
-        console.log(`  Intent: ${result.intent.displayName}`);
-    } else {
-        console.log('  No intent matched.');
-    }
-    console.log(`  Parameters: ${result.parameters}`);
-    if (result.outputContexts && result.outputContexts.length) {
-        console.log('  Output contexts:');
-        result.outputContexts.forEach(context => {
-            const contextId =
-                contextClient.matchContextFromProjectAgentSessionContextName(
-                    context.name
-                );
-            const contextParameters = JSON.stringify(
-                struct.decode(context.parameters)
-            );
-            console.log(`${contextId}`);
-            console.log(`lifespan: ${context.lifespanCount}`);
-            console.log(`parameters: ${contextParameters}`);
-        });
-    }
-
-}
-
 
 router.post('/', async (req, res) => {
     // console.log(req.body);
@@ -247,7 +175,7 @@ router.post('/', async (req, res) => {
     const response = await detectIntent(
         query ? req.body.msg : null,
         userId,
-        !query ? base64Data : null
+        !query ? base64Data : null,
     );
     // console.log(response);
 

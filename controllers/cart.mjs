@@ -33,6 +33,12 @@ import { productModel } from "../models/productModel.mjs";
 //     // return itemIndex
 // }
 
+export const get_cart = async (userId) => {
+    const cart = await cartModel.findOne({ user_id: userId, isChecked: false })
+    if (!cart) throw new Error('Cart not found')
+    return cart
+}
+
 export const create_update_cart = async (productId, quantity, userId) => {
     try {
         const product = await productModel.findById(productId, {}, { select: 'category file title unit_name unit_price' })

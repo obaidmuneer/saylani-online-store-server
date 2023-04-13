@@ -3,3 +3,5 @@ node_modules
 todo.txt
 .vercel
 service_account.json
+dialogflow_v2.mjs
+stripe_old.mjs

@@ -32,7 +32,7 @@ const auth = async (req, res, next) => {
         req.token = token
         req.verifiedToken = verifiedToken
         req.user = user
-        req.cart = cart || []
+        req.cart = cart || null
         req.orders = orders
         next()
 
