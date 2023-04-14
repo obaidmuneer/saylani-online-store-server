@@ -107,6 +107,7 @@ router.post('/', async (req, res) => {
                 } else {
                     resData = UTILS.response(`Your cart is empty. Please add items to your cart before placing an order.`, { name: get_info, lifespanCount: 0 });
                 }
+                break;
 
             case 'payment':
                 const info = contexts.find(context => context.name.includes('get-info'));
@@ -129,7 +130,7 @@ router.post('/', async (req, res) => {
         }
 
         res.send(resData);
-        
+
     } catch (error) {
         console.error(error);
         UTILS.response(`Oops! Something went wrong. Please try again later.`);
