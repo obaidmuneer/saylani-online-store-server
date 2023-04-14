@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import stripe from '../controllers/stripe.mjs';
+import stripe from '../helpers/stripe.mjs';
 import paymentModel from '../models/paymentModel.mjs';
 
 const router = Router()

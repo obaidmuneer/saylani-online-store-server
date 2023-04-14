@@ -35,7 +35,7 @@ import { productModel } from "../models/productModel.mjs";
 
 export const get_cart = async (userId) => {
     const cart = await cartModel.findOne({ user_id: userId, isChecked: false })
-    if (!cart) throw new Error('Cart not found')
+    // if (!cart) throw new Error('Cart not found')
     return cart
 }
 

@@ -1,4 +1,4 @@
-import stripe from "./stripe.mjs";
+import stripe from '../helpers/stripe.mjs'
 
 export const make_payment = async (params, user_data) => {
     const { card_number: number, exp_month, exp_year, cvc } = params
