@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import CONTROLLERS from '../controllers/export_controller.mjs'
 import UTILS from '../helpers/utils.mjs';
+import { textGenrator } from '../helpers/textGenrator.mjs';
 
 const router = Router()
 
 router.post('/', async (req, res) => {
     const body = req.body
+    const query = body.queryResult.queryText
     const intentName = body.queryResult.intent.displayName
     const params = body.queryResult.parameters
     console.log(params);
@@ -122,6 +124,12 @@ router.post('/', async (req, res) => {
                 } else {
                     resData = UTILS.response(`I am really sorry i could not process your request, if you have any issue kindly contact saylani online support`)
                 }
+                break;
+
+            case 'Default Fallback Intent':
+                console.log(query);
+                const resposne = await textGenrator(query)
+                resData = UTILS.response(resposne)
                 break;
 
             default:

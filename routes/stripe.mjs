@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import stripe from '../helpers/stripe.mjs';
 import paymentModel from '../models/paymentModel.mjs';
+import * as dotenv from "dotenv";
+dotenv.config()
 
 const router = Router()
 
